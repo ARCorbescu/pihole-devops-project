@@ -1,15 +1,13 @@
 #!/bin/bash
 
-##############################################################################
-# System Monitor Script - Bash Version
-# 
-# Purpose: Continuously monitor system resources (CPU, RAM, Disk) and 
-#          check Pi-hole container status. Logs output to STDOUT for 
-#          Docker log capture.
-#
-# Author: [Your Name]
-# Date: $(date +%Y-%m-%d)
-##############################################################################
+# Author: Corbescu Alexandru-Robert
+# Date Created: 2025-11-13
+# Last Modified: 2025-11-14
+
+# Description
+# Continuously monitor system resources (CPU, RAM, Disk) and 
+# check Pi-hole container status. Logs output to STDOUT for 
+# Docker log capture.
 
 # Configuration
 SLEEP_INTERVAL=30  # Seconds between monitoring cycles
