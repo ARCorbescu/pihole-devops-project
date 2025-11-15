@@ -1,0 +1,60 @@
+# Dockerfile for System Monitor (Bash Script)
+# 
+# This container runs a Bash script that monitors system resources
+# (CPU, RAM, Disk) and checks Pi-hole container status.
+#
+# Build: (make sure build context includes repository root so COPY "scripts/system_monitor.sh" is available)
+# Option A (recommended, run from repository root):
+#   docker build -f docker/Dockerfile.monitor-bash -t system-monitor:latest .
+# Option B (run from this docker/ directory, set parent as context):
+#   cd docker && docker build -f Dockerfile.monitor-bash -t system-monitor:latest ..
+# Run: docker run --rm system-monitor:latest
+
+# Use Ubuntu 22.04 as base image (lightweight and well-supported)
+FROM ubuntu:22.04
+
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install required system utilities
+# - sysstat: provides 'mpstat' for CPU monitoring
+# - procps: provides 'top' command
+# - curl: useful for health checks and debugging
+# - ca-certificates: for HTTPS requests
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        sysstat \
+        procps \
+        curl \
+        ca-certificates \
+        bc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user for running the script (security best practice)
+# Using UID 1000 which is standard for first non-root user
+RUN useradd -u 1000 -m -s /bin/bash monitor
+
+# Create application directory
+WORKDIR /app
+
+# Copy the monitoring script from host to container
+# Source path is relative to build context (project root)
+COPY scripts/system_monitor.sh /app/system_monitor.sh
+
+# Make script executable
+RUN chmod +x /app/system_monitor.sh
+
+# Change ownership to non-root user
+RUN chown -R monitor:monitor /app
+
+# Switch to non-root user
+USER monitor
+
+# Health check: verify the script process is running
+# This runs every 30 seconds by default
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD pgrep -f system_monitor.sh > /dev/null || exit 1
+
+# Set the script as the container's entry point
+# This means when the container starts, it will run this script
+ENTRYPOINT ["/app/system_monitor.sh"]
