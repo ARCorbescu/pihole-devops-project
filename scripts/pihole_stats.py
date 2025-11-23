@@ -2,7 +2,8 @@ import os
 import time
 from pihole6api import PiHole6Client
 
-# Citim din variabile de mediu sau folosim valori default
+time.sleep(35)
+
 host = os.getenv("PIHOLE_URL", "http://localhost")
 token = os.getenv("PIHOLE_API_KEY", "MyPass123")
 

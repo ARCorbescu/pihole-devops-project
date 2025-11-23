@@ -167,3 +167,234 @@ networks:
     ipam:
       config:
         - subnet: 172.20.0.0/16
+
+# SSJ
+
+# ################################################################################
+# # 🧩 Docker Compose Configuration for Pi-hole DevOps Project
+# #
+# # Overview:
+# #   This Compose stack orchestrates three coordinated services:
+# #     1️⃣  Pi-hole          — DNS-level ad blocker and local DNS resolver
+# #     2️⃣  Bash Monitor     — Lightweight system resource monitor (CPU, RAM, Disk)
+# #     3️⃣  Python Monitor   — Pi-hole API statistics collector (via REST API)
+# #
+# # Prerequisites:
+# #   1. Copy .env.example to .env and configure your settings
+# #   2. Ensure ports 53, 80, 443 are free on host
+# #   3. Disable systemd-resolved if needed
+# #
+# # Usage:
+# #   docker compose up -d              # Start all services
+# #   docker compose logs -f            # View logs
+# #   docker compose down               # Stop all services
+# #   docker compose restart pihole     # Restart single service
+# ################################################################################
+
+# services:
+#   ##############################################################################
+#   # 🧱 SERVICE 1: Pi-hole — DNS Ad Blocker + Web Dashboard
+#   #
+#   # Using host networking for direct DNS access at port 53.
+#   # This ensures Pi-hole is reachable from all devices on your LAN.
+#   #
+#   # Access Web UI: http://${HOST_IP}/admin or http://localhost/admin
+#   ##############################################################################
+#   pihole:
+#     container_name: pihole
+#     image: pihole/pihole:latest
+#     network_mode: host
+#     hostname: pihole
+
+#     # DNS configuration
+#     dns:
+#       - 127.0.0.1
+#       - ${DNS1:-1.1.1.1}
+
+#     # Ports (informational only, host mode ignores port mappings)
+#     ports:
+#       - "53:53/tcp"
+#       - "53:53/udp"
+#       - "80:80/tcp"
+#       - "443:443/tcp"
+
+#     environment:
+#       # Timezone for correct log timestamps
+#       TZ: ${TZ:-Europe/Bucharest}
+
+#       # Pi-hole v6+ password configuration
+#       FTLCONF_webserver_api_password: ${PIHOLE_PASSWORD}
+
+#       # Upstream DNS servers
+#       DNS1: ${DNS1:-1.1.1.1}
+#       DNS2: ${DNS2:-8.8.8.8}
+
+#       # DNS security and configuration
+#       DNSSEC: "true"
+#       DNSMASQ_LISTENING: "all"
+#       PIHOLE_DNS_: "${DNS1:-1.1.1.1};${DNS2:-8.8.8.8}"
+#       REV_SERVER: "false"
+
+#     # Persistent storage for Pi-hole configuration and blocklists
+#     volumes:
+#       - ./etc-pihole:/etc/pihole
+#       - ./etc-dnsmasq.d:/etc/dnsmasq.d
+
+#     # Required for network administration
+#     cap_add:
+#       - NET_ADMIN
+
+#     # Always restart unless explicitly stopped
+#     restart: unless-stopped
+
+#     # Health check: verify DNS is responding
+#     healthcheck:
+#       test: ["CMD", "dig", "@127.0.0.1", "pi.hole", "+short"]
+#       interval: 30s
+#       timeout: 10s
+#       retries: 3
+#       start_period: 60s
+
+#     # Labels for better container management
+#     labels:
+#       - "com.pihole-devops.service=pihole"
+#       - "com.pihole-devops.description=DNS ad blocker"
+
+#   ##############################################################################
+#   # 📊 SERVICE 2: Bash System Monitor
+#   #
+#   # Monitors system resources (CPU, RAM, Disk) and Docker container status.
+#   # Runs in bridge network but can still monitor host resources.
+#   ##############################################################################
+#   bash-monitor:
+#     container_name: bash-monitor
+#     hostname: bash-monitor
+
+#     # Build from Dockerfile
+#     build:
+#       context: ..
+#       dockerfile: docker/Dockerfile.monitor-bash
+
+#     # Wait for Pi-hole to be healthy before starting
+#     depends_on:
+#       pihole:
+#         condition: service_healthy
+
+#     environment:
+#       # Pi-hole host (localhost since Pi-hole is in host network)
+#       PIHOLE_HOST: "127.0.0.1"
+      
+#       # Monitoring interval in seconds
+#       MONITOR_INTERVAL: ${BASH_MONITOR_INTERVAL:-30}
+
+#     # Mount Docker socket to monitor containers (read-only for security)
+#     volumes:
+#       - /var/run/docker.sock:/var/run/docker.sock:ro
+
+#     # Always restart unless explicitly stopped
+#     restart: unless-stopped
+
+#     # Health check: verify monitoring script is running
+#     healthcheck:
+#       test: ["CMD", "pgrep", "-f", "system_monitor.sh"]
+#       interval: 30s
+#       timeout: 10s
+#       retries: 3
+#       start_period: 10s
+
+#     # Connect to bridge network (not host mode)
+#     networks:
+#       - pihole-network
+
+#     # Labels for better container management
+#     labels:
+#       - "com.pihole-devops.service=bash-monitor"
+#       - "com.pihole-devops.description=System resource monitor"
+
+#   ##############################################################################
+#   # 🐍 SERVICE 3: Python Pi-hole Monitor
+#   #
+#   # Collects and displays Pi-hole statistics via REST API.
+#   # Connects to Pi-hole on localhost (host network mode).
+#   ##############################################################################
+#   python-monitor:
+#     container_name: python-monitor
+#     hostname: python-monitor
+
+#     # Build from Dockerfile
+#     build:
+#       context: ..
+#       dockerfile: docker/Dockerfile.monitor-python
+
+#     # Wait for Pi-hole to be healthy before starting
+#     depends_on:
+#       pihole:
+#         condition: service_healthy
+
+#     environment:
+#       # Pi-hole API URL (localhost since Pi-hole is in host network)
+#       PIHOLE_URL: "http://${HOST_IP:-127.0.0.1}"
+      
+#       # API authentication key
+#       PIHOLE_API_KEY: ${PIHOLE_PASSWORD}
+      
+#       # Monitoring interval in seconds
+#       MONITOR_INTERVAL: ${PYTHON_MONITOR_INTERVAL:-60}
+
+#     # Delay startup to ensure Pi-hole API is fully ready
+#     command: ["sh", "-c", "sleep 10 && python3 /app/pihole_stats.py"]
+
+#     # Always restart unless explicitly stopped
+#     restart: unless-stopped
+
+#     # Health check: verify Python script is running
+#     healthcheck:
+#       test: ["CMD", "pgrep", "-f", "pihole_stats.py"]
+#       interval: 60s
+#       timeout: 10s
+#       retries: 3
+#       start_period: 20s
+
+#     # Connect to bridge network
+#     networks:
+#       - pihole-network
+
+#     # Labels for better container management
+#     labels:
+#       - "com.pihole-devops.service=python-monitor"
+#       - "com.pihole-devops.description=Pi-hole API statistics collector"
+
+# ################################################################################
+# # 🌐 NETWORKS
+# #
+# # Bridge network for monitor containers to communicate.
+# # Pi-hole uses host network, so monitors can't reach it via Docker DNS.
+# ################################################################################
+# networks:
+#   pihole-network:
+#     driver: bridge
+#     ipam:
+#       driver: default
+#       config:
+#         - subnet: 172.20.0.0/16
+#     labels:
+#       - "com.pihole-devops.network=monitoring"
+
+# ################################################################################
+# # 📦 VOLUMES (Optional named volumes instead of bind mounts)
+# #
+# # Uncomment below and change service volume definitions to use named volumes:
+# #   volumes:
+# #     - pihole-data:/etc/pihole
+# #     - dnsmasq-data:/etc/dnsmasq.d
+# ################################################################################
+# # volumes:
+# #   pihole-data:
+# #     driver: local
+# #     labels:
+# #       - "com.pihole-devops.volume=pihole-config"
+# #   
+# #   dnsmasq-data:
+# #     driver: local
+# #     labels:
+# #       - "com.pihole-devops.volume=dnsmasq-config"
