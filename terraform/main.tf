@@ -83,7 +83,16 @@ resource "aws_security_group" "allow_ssh" {
     from_port   = 53
     to_port     = 53
     protocol    = "udp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["81.196.215.162/32"]
+  }
+
+  # Inbound Rule: Allow Flask Webhook (Port 5005)
+  ingress {
+    description = "Flask Webhook"
+    from_port   = 5005
+    to_port     = 5005
+    protocol    = "tcp"
+    cidr_blocks = ["81.196.215.162/32"]
   }
 
   # Outbound Rule: Allow everything

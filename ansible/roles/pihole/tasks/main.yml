@@ -11,7 +11,7 @@
 
 - name: Create requirements file
   copy:
-    content: "pihole6api\n"
+    content: "pihole6api\nflask\n"
     dest: "{{ project_dir }}/requirements-monitor.txt"
 
 - name: Fix Docker Compose Network IP
@@ -64,6 +64,7 @@
   community.docker.docker_compose_v2:
     project_src: "{{ project_dir }}/docker"
     state: present
+    build: always
     env_files: []
   environment:
     PIHOLE_PASSWORD: "{{ pihole_password }}"
