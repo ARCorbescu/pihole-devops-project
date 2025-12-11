@@ -6,7 +6,7 @@
   git:
     repo: "{{ project_repo }}"
     dest: "{{ project_dir }}"
-    version: main
+    version: test
     force: yes
 
 - name: Create requirements file

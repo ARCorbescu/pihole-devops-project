@@ -16,6 +16,15 @@
 #    - We then linked these to the `aws_instance` resource.
 ##################################################################################
 
+##################################################################################
+# 🏗️ INFRASTRUCTURE DEFINITION
+#
+# This file defines the "Hardware" layer of our Pi-hole deployment:
+# 1. EC2 Instance (The Virtual Machine)
+# 2. Security Group (The Firewall)
+# 3. SSH Key (The Key to the Door)
+##################################################################################
+
 # --- Data Source: Ubuntu AMI ---
 # Fetches the latest Ubuntu 22.04 AMI (Amazon Machine Image) ID dynamically.
 # This ensures we always use the latest patched version when creating the instance.

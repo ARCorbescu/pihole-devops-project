@@ -34,7 +34,19 @@ cd ../ansible
 ansible-playbook -i inventory.ini playbook.yml
 ```
 
-## 3. Optimizations & Features
+### 3. Secret Management (Ansible Vault)
+Sensitive data (like the Pi-hole password) is stored in `ansible/vault.yml`.
+To encrypt the file:
+```bash
+ansible-vault encrypt ansible/vault.yml
+# Enter a strong password
+```
+To run the playbook with encrypted secrets:
+```bash
+ansible-playbook -i inventory.ini playbook.yml --ask-vault-pass
+```
+
+## 4. Optimizations & Features
 -   **Dynamic Inventory**: Terraform writes the `inventory.ini` file for you.
 -   **Ansible Roles**: Logic is split into `common` (System) and `pihole` (App) for better modularity.
 -   **Optimized Deployment**: Docker images are pulled *before* disabling system DNS, eliminating connection errors.
