@@ -1,6 +1,22 @@
 # Command Cheat Sheet
 
-## 1. Terraform Deployment
+## 1. Configuration Management (Ansible)
+**Run Playbook:**
+```bash
+cd ansible
+ansible-playbook -i inventory.ini playbook.yml --ask-vault-pass
+```
+
+**Manage Secrets (Vault):**
+```bash
+# Edit encrypted file
+ansible-vault edit vault.yml
+
+# View encrypted file
+ansible-vault view vault.yml
+```
+
+## 2. Infrastructure (Terraform)
 Commands to manage the infrastructure lifecycle.
 
 | Action | Command | Description |
@@ -11,7 +27,7 @@ Commands to manage the infrastructure lifecycle.
 | **Redeploy App** | `terraform taint aws_instance.pihole` | Marks instance for recreation (forcing new User Data run). |
 | **Clean Up** | `terraform destroy` | Deletes **ALL** resources (Stop paying). |
 
-## 2. SSH Access & Management
+## 3. SSH Access & Management
 How to connect to your EC2 instance.
 
 **Get Public IP:**
@@ -37,7 +53,7 @@ ssh -i pihole_key ubuntu@$(aws ec2 describe-instances --filters "Name=tag:Name,V
 tail -n 50 /var/log/cloud-init-output.log
 ```
 
-## 3. Testing & Verification
+## 4. Testing & Verification
 Verify the application is working.
 
 **Check Docker Containers:**
@@ -71,7 +87,17 @@ dig @<public-ip> google.com +short
 dig @$(aws ec2 describe-instances --filters "Name=tag:Name,Values=PiHole - AWS" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].PublicIpAddress" --output text) google.com +short
 ```
 
-## 4. Key Setup Commands (One-time)
+## 6. Utilities
+**Dynamic IP Updater:**
+```bash
+# Run manually
+python3 scripts/update_ip.py
+
+# Run in background (12h interval)
+nohup python3 scripts/update_ip.py &
+```
+
+## 5. Key Setup Commands (One-time)
 These were used during the initial setup.
 
 **Generate SSH Key:**

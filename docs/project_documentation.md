@@ -14,25 +14,36 @@ We defined our infrastructure in `main.tf` and `provider.tf`.
     - **Security Rule**: Restricted to **User's IP Address Only** (`81.196.215.162/32`) to prevent unauthorized access.
 4.  **SSH Key Pair**: Dedicated `pihole_key` for secure access.
 
-### Automation (User Data)
-The `scripts/install_docker.sh` runs on first boot to:
-1.  Install Docker & Compose.
-2.  **Fix System DNS**: Relink `/etc/resolv.conf` to upstream AWS DNS and restart Docker (Fixes `connection refused` pulling images).
-3.  **Fix Port 53**: Disable `systemd-resolved` stub listener.
-4.  Deploy Pi-hole container.
-5.  **Configure Pi-hole v6**: Automatically set `listeningMode = "ALL"` in `pihole.toml` to allow non-local queries (required for cloud setup).
+### Automation (Ansible)
+We switched from a simple shell script to Ansible for better configuration management.
+1.  **Roles**:
+    -   `common`: Installs Docker, Git, and system dependencies.
+    -   `pihole`: Handles application deployment and configuration.
+2.  **Smart Deployment ("Pull-First")**:
+    -   Pulls Docker images *before* disabling system DNS to prevent connection errors.
+    -   Disables `systemd-resolved` to free up Port 53.
+    -   Deploys Pi-hole and configures it to listen on all interfaces.
+3.  **Secrets**: Sensitive data (passwords) are encrypted using **Ansible Vault**.
 
 ## 3. Project Structure
 ```
 .
-├── main.tf                 # Infrastructure definition (EC2, SG, Key)
-├── provider.tf             # AWS Provider config
+├── terraform/          # Infrastructure (EC2, Firewall, Inventory Gen)
+│   ├── main.tf
+│   ├── inventory.tf
+│   └── ...
+├── ansible/            # Configuration Management
+│   ├── playbook.yml
+│   ├── vault.yml       # Encrypted Secrets
+│   └── roles/
+│       ├── common/     # System Setup
+│       └── pihole/     # App Deployment
 ├── scripts/
-│   └── install_docker.sh   # Automation script (Install & Config)
-├── pihole_key              # Private SSH key
-├── pihole_key.pub          # Public SSH key
-├── documentation.md        # Project documentation
-└── cheat_sheet.md          # Quick reference commands
+│   └── update_ip.py    # IP Drift Auto-fixer
+└── docs/               # Documentation
+    ├── INSTALLATION.md
+    ├── USAGE.md
+    └── ...
 ```
 
 ## 4. Problems Encountered & Solutions
@@ -60,7 +71,9 @@ The `scripts/install_docker.sh` runs on first boot to:
 ### 6. Security Risks
 **Problem**: Enabling "Permit All Origins" makes the server vulnerable to DNS Amplification attacks if exposed to the entire internet.
 **Solution**: We used AWS Security Groups in `main.tf` to strict ingress rules, allowing traffic **only** from your specific IP address (`81.196.215.162/32`).
-
+### 7. Dynamic IP Drift
+**Problem**: The user's home IP address is dynamic and changes periodically. Since the AWS Security Group is restricted to only this IP, access is lost when the IP changes.
+**Solution**: We created a Python script (`scripts/update_ip.py`) that runs locally. It checks the current public IP every 12 hours and uses the AWS CLI (`subprocess`) to automatically update the Security Group rules if a change is detected.
 ## 5. Security & Maintenance
 - **Access Control**: The Security Group currently allows **only your IP**. If your home IP changes, you will lose access. Update `main.tf` and run `terraform apply`.
 - **Git**: Project state is saved in a local git repository.

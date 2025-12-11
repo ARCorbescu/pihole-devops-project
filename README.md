@@ -51,3 +51,10 @@ ansible-playbook -i inventory.ini playbook.yml --ask-vault-pass
 -   **Ansible Roles**: Logic is split into `common` (System) and `pihole` (App) for better modularity.
 -   **Optimized Deployment**: Docker images are pulled *before* disabling system DNS, eliminating connection errors.
 -   **Security**: Restricted ingress via AWS Security Groups.
+
+## 5. Documentation
+For detailed instructions, please refer to the `docs/` directory:
+-   [Installation Guide](docs/INSTALLATION.md)
+-   [Usage & Webhooks](docs/USAGE.md)
+-   [Project Architecture](docs/project_documentation.md)
+-   [Command Cheat Sheet](docs/cheat_sheet.md)
