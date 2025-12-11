@@ -13,9 +13,6 @@
   become: true
   vars_files:
     - vault.yml
-  vars:
-    project_repo: "https://github.com/ARCorbescu/pihole-devops-project.git"
-    project_dir: "/home/ubuntu/pihole-devops-project"
 
   roles:
     - common
