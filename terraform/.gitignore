@@ -1,0 +1,8 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# SSH Keys
+pihole_key
+pihole_key.pub

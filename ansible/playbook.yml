@@ -1,0 +1,12 @@
+---
+- name: Deploy Pi-hole on Ubuntu EC2
+  hosts: all
+  become: true
+  vars:
+    project_repo: "https://github.com/ARCorbescu/pihole-devops-project.git"
+    project_dir: "/home/ubuntu/pihole-devops-project"
+    pihole_password: "PiAdmin"
+
+  roles:
+    - common
+    - pihole
