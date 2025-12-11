@@ -17,8 +17,15 @@ docker/etc-dnsmasq.d/
 
 # Ansible
 ansible/inventory/hosts.yml
+ansible/inventory.ini
 *.retry
 .vault_pass
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
 
 # AWS
 *.pem

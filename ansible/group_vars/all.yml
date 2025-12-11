@@ -1,0 +1,10 @@
+---
+# ==============================================================================
+# 🌍 GLOBAL VARIABLES
+# Shared configuration for all hosts and roles.
+# ==============================================================================
+project_repo: "https://github.com/ARCorbescu/pihole-devops-project.git"
+project_dir: "/home/ubuntu/pihole-devops-project"
+
+# Webhook Port (Must match Docker Compose & AWS Security Group)
+webhook_port: 5005

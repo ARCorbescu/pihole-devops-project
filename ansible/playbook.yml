@@ -1,0 +1,19 @@
+---
+# ==============================================================================
+# 🦅 PI-HOLE DEPLOYMENT PLAYBOOK
+#
+# Strategy: "Pull First, Fix Later"
+# 1. Install Docker & Git (System)
+# 2. Pull Docker Images (Uses System DNS before we break it)
+# 3. Disable System DNS (Frees Port 53)
+# 4. Start Pi-hole (Takes over Port 53)
+# ==============================================================================
+- name: Deploy Pi-hole on Ubuntu EC2
+  hosts: all
+  become: true
+  vars_files:
+    - vault.yml
+
+  roles:
+    - common
+    - pihole

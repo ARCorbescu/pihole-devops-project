@@ -143,6 +143,9 @@ services:
       PIHOLE_API_KEY: "${PIHOLE_PASSWORD}"
       MONITOR_INTERVAL: "60"
 
+    ports:
+      - "5005:5005"
+
     # Allow Pi-hole backend to fully boot
     command: ["sh", "-c", "sleep 10 && python3 /app/pihole_stats.py"]
 
