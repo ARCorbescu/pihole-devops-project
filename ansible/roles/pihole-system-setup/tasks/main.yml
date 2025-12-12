@@ -1,0 +1,12 @@
+---
+# -------------------------------------------------------
+# System Setup & Docker Installation
+# -------------------------------------------------------
+- name: Install dependencies
+  apt:
+    name:
+      - ca-certificates
+      - curl
+      - git
+    state: present
+    update_cache: true

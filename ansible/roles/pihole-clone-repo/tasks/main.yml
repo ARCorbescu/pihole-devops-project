@@ -1,0 +1,11 @@
+---
+# -------------------------------------------------------
+# Repo Clone
+# -------------------------------------------------------
+
+- name: Clone Pi-hole Project
+  git:
+    repo: "{{ project_repo }}"
+    dest: "{{ project_dir }}"
+    version: final_final_changes
+    force: yes
