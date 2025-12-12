@@ -6,7 +6,7 @@
   git:
     repo: "{{ project_repo }}"
     dest: "{{ project_dir }}"
-    version: main
+    version: more_tests
     force: yes
 
 - name: Pull Docker Images

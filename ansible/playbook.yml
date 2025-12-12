@@ -16,5 +16,5 @@
 
   roles:
     - common
-    # - pihole
     - geerlingguy.docker
+    - pihole
