@@ -2,12 +2,10 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Copy only requirements first (optimizes rebuilds)
-COPY scripts/pihole_stats.py ./pihole_stats.py
+# Copy requirements and script from scripts/
+COPY scripts/requirements.txt .
+COPY scripts/pihole_stats.py .
 
-# Use a minimal clean requirements file (we can generate it below)
-COPY requirements-monitor.txt .
-
-RUN pip install --no-cache-dir -r requirements-monitor.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 CMD ["python", "pihole_stats.py"]

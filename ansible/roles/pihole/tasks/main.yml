@@ -9,11 +9,6 @@
     version: main
     force: yes
 
-- name: Create requirements file
-  copy:
-    content: "pihole6api\nflask\n"
-    dest: "{{ project_dir }}/requirements-monitor.txt"
-
 - name: Fix Docker Compose Network IP
   replace:
     path: "{{ project_dir }}/docker/docker-compose.yml"
