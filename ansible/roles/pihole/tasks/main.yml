@@ -6,18 +6,18 @@
   git:
     repo: "{{ project_repo }}"
     dest: "{{ project_dir }}"
-    version: main
+    version: final_final_changes
     force: yes
 
-- name: Fix Docker Compose Network IP
-  replace:
-    path: "{{ project_dir }}/docker/docker-compose.yml"
-    regexp: '192\.168\.1\.143'
-    replace: '172.17.0.1'
-
-# OPTIMIZATION: Pull images NOW while system DNS is still working!
+# OPTIMIZATION: Pull & BUILD images NOW while system DNS is still working!
 - name: Pull Docker Images
   command: docker compose pull
+  args:
+    chdir: "{{ project_dir }}/docker"
+  changed_when: false
+
+- name: Build Docker Images (with working DNS)
+  command: docker compose build
   args:
     chdir: "{{ project_dir }}/docker"
   changed_when: false
@@ -59,7 +59,7 @@
   community.docker.docker_compose_v2:
     project_src: "{{ project_dir }}/docker"
     state: present
-    build: always
+    # build: always <--- REMOVED to prevent rebuilding without DNS
     env_files: []
   environment:
     PIHOLE_PASSWORD: "{{ pihole_password }}"
