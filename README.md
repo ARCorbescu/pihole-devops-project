@@ -215,17 +215,6 @@ This project demonstrates:
 
 ---
 
-## 📝 License
-
-MIT License - See [LICENSE](LICENSE) for details
-
----
-
-## 🤝 Contributing
-
-Contributions welcome! Please open an issue or submit a pull request.
-
----
 
 **Author**: ARCorbescu  
 **Repository**: https://github.com/ARCorbescu/pihole-devops-project
