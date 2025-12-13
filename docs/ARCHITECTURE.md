@@ -312,10 +312,6 @@ services:
 ### Problem 1: Port 53 Conflict
 **Issue:** Ubuntu's `systemd-resolved` already uses port 53.
 
-**Failed Solutions:**
-- Disabling the stub listener (`DNSStubListener=no`) → Broke Docker DNS
-- Symlinking `/etc/resolv.conf` → Still had conflicts
-
 **Working Solution:**
 Fully disable `systemd-resolved` and point `/etc/resolv.conf` to `127.0.0.1`:
 ```bash
