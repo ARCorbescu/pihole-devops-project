@@ -337,6 +337,10 @@ docker exec pihole sed -i 's/listeningMode = "LOCAL"/listeningMode = "ALL"/' /et
 docker restart pihole
 ```
 
+** This can also be fixed from the UI **
+<img width="1301" height="811" alt="image" src="https://github.com/user-attachments/assets/071b6154-347e-4a9c-a831-569363c8ec06" />
+
+
 ### Problem 4: Dynamic IP Changes
 **Issue:** User's home IP changes, breaking Security Group rules.
 
