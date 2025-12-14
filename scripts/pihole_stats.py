@@ -125,7 +125,7 @@ def fix_the_internet():
             print(f"Unblocking: {domain}")
             # Remove the domain from the 'deny' list.
             # This restores access to these sites.
-            client.domain_management.delete_domain(domain, "deny", "regex", groups=[0])
+            client.domain_management.delete_domain(domain, "deny", "regex")
         return "Internet fixed 😇", 200
 
     except Exception as e:
