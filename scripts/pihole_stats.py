@@ -132,16 +132,38 @@ def fix_the_internet():
         print(f"[!] Error unblocking: {e}")
         return f"Error: {e}", 500
 
-
-@app.route('/trigger', methods=['GET','POST'])
-def trigger():
+@app.route('/show_the_internet', methods=['GET','POST'])
+def show_the_internet():
     """
-    A generic test webhook.
+    Webhook to show Pi-hole statistics.
 
-    Can be used to verify that the server is reachable and responding.
+    Triggered via GET or POST request to /show_the_internet.
+    Returns Pi-hole stats as JSON.
+
+    Returns:
+        JSON response with stats or error message.
     """
-    print("🔔 General webhook triggered")
-    return "OK", 200
+    print("📊 Siri: SHOW THE INTERNET!")
+
+    try:
+        # Fetch Pi-hole statistics
+        history = client.metrics.get_history()
+        queries = client.metrics.get_queries()
+        
+        # Return as JSON (Flask automatically formats it nicely)
+        return {
+            "status": "success",
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "history": history,
+            "queries": queries
+        }, 200
+
+    except Exception as e:
+        print(f"[!] Error fetching stats: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }, 500
 
 
 if __name__ == "__main__":
