@@ -39,6 +39,9 @@ DOMAINS_TO_BLOCK = [
     "(\.|^)www\.netflix\.com$",
     "(\.|^)www\.tiktok\.com$",
     "(\.|^)www\.instagram\.com$",
+    "(\.|^)netflix\.com$",
+    "(\.|^)tiktok\.com$",
+    "(\.|^)instagram\.com$",
 ]
 
 # -----------------------------------------------------
