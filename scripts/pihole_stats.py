@@ -99,7 +99,7 @@ def break_the_internet():
             print(f"Blocking: {domain}")
             # Add the domain to the 'deny' list (blacklist) with 'regex' matching.
             # This prevents access to these sites immediately.
-            client.domain_management.add_domain(domain, "deny", "exact")
+            client.domain_management.add_domain(domain, "deny", "regex")
         return "Internet broken 😈", 200
 
     except Exception as e:
@@ -125,7 +125,7 @@ def fix_the_internet():
             print(f"Unblocking: {domain}")
             # Remove the domain from the 'deny' list.
             # This restores access to these sites.
-            client.domain_management.delete_domain(domain, "deny", "exact")
+            client.domain_management.delete_domain(domain, "deny", "regex")
         return "Internet fixed 😇", 200
 
     except Exception as e:
