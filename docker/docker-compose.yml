@@ -66,6 +66,7 @@ services:
     # Pi-hole will use these for upstream DNS queries
     dns:
       - 127.0.0.1  # Use itself for DNS (after startup)
+      - 1.1.1.1    # Cloudflare as fallback
 
     environment:
       # Timezone for correct log timestamps
@@ -81,6 +82,9 @@ services:
 
       # Enable DNSSEC for additional security
       DNSSEC: "true"
+
+      # Listen on all interfaces (required for LAN access)
+      DNSMASQ_LISTENING: "all"
 
       # Alternative DNS configuration format
       PIHOLE_DNS_: "1.1.1.1;8.8.8.8"
