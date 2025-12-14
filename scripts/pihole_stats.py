@@ -25,7 +25,7 @@ from pihole6api import PiHole6Client
 # Load configuration from environment variables.
 # PIHOLE_URL: The base URL of your Pi-hole instance (default: http://localhost)
 # PIHOLE_API_KEY: The API token/password for authentication (default: PiAdmin)
-host = os.getenv("PIHOLE_URL", "http://localhost")
+host = os.getenv("PIHOLE_URL", "http://16.171.233.214")
 token = os.getenv("PIHOLE_API_KEY", "PiAdmin")
 
 print(f"🔗 Connecting to Pi-hole at {host}")
@@ -99,7 +99,7 @@ def break_the_internet():
             print(f"Blocking: {domain}")
             # Add the domain to the 'deny' list (blacklist) with 'regex' matching.
             # This prevents access to these sites immediately.
-            client.domain_management.add_domain(domain, "deny", "regex")
+            client.domain_management.add_domain(domain, "deny", "regex", groups=[0])
         return "Internet broken 😈", 200
 
     except Exception as e:
@@ -125,7 +125,7 @@ def fix_the_internet():
             print(f"Unblocking: {domain}")
             # Remove the domain from the 'deny' list.
             # This restores access to these sites.
-            client.domain_management.delete_domain(domain, "deny", "regex")
+            client.domain_management.delete_domain(domain, "deny", "regex", groups=[0])
         return "Internet fixed 😇", 200
 
     except Exception as e:
