@@ -134,19 +134,3 @@ resource "aws_instance" "pihole" {
     Name = "PiHole - AWS"
   }
 }
-
-resource "aws_instance" "pihole-testing" {
-  ami = data.aws_ami.ubuntu.id
-  # We switched from t2.micro (not free tier in this region?) to t3.micro
-  instance_type = "t3.micro"
-
-  # References the key pair created above
-  key_name = aws_key_pair.deployer.key_name
-
-  # References the security group created above
-  vpc_security_group_ids = [aws_security_group.allow_ssh.id]
-
-  tags = {
-    Name = "PiHole - AWS - Testing"
-  }
-}
