@@ -36,12 +36,9 @@ client = PiHole6Client(host, token)
 # Domains you want Siri to block/unblock.
 # These are the sites that will be added/removed from the blocklist.
 DOMAINS_TO_BLOCK = [
-    "(\.|^)www\.netflix\.com$",
-    "(\.|^)www\.tiktok\.com$",
-    "(\.|^)www\.instagram\.com$",
     "(\.|^)netflix\.com$",
-    "(\.|^)tiktok\.com$",
     "(\.|^)instagram\.com$",
+    "(\.|^)tiktok\.com$",
 ]
 
 # -----------------------------------------------------
