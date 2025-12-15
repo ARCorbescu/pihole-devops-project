@@ -8,7 +8,7 @@
     state: present
     env_files: []
   environment:
-    PIHOLE_PASSWORD: "{{ pihole_password }}"
+    PIHOLE_PASSWORD: "{{ pihole_secret_password }}"
 
 # -------------------------------------------------------
 # Pi-hole V6 Configuration
