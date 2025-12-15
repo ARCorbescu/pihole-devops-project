@@ -15,5 +15,9 @@
     - vault.yml
 
   roles:
-    - common
-    - pihole
+    - pihole-system-setup
+    - geerlingguy.docker # Docker installation role
+    - pihole-clone-repo
+    - pihole-docker-deployment
+    - pihole-disable-dns
+    - pihole-start-services

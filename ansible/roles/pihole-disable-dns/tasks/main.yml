@@ -1,0 +1,22 @@
+---
+# -------------------------------------------------------
+# Disable System DNS
+# Network Fixes (Port 53 & DNS Switchover)
+# -------------------------------------------------------
+
+- name: Stop and Disable systemd-resolved (Free up Port 53)
+  service:
+    name: systemd-resolved
+    state: stopped
+    enabled: no
+
+- name: Remove resolv.conf symlink
+  file:
+    path: /etc/resolv.conf
+    state: absent
+
+- name: Point Host DNS to Localhost (Pi-hole will take over)
+  copy:
+    dest: /etc/resolv.conf
+    content: "nameserver 127.0.0.1\n"
+    mode: '0644'

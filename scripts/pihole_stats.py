@@ -25,7 +25,7 @@ from pihole6api import PiHole6Client
 # Load configuration from environment variables.
 # PIHOLE_URL: The base URL of your Pi-hole instance (default: http://localhost)
 # PIHOLE_API_KEY: The API token/password for authentication (default: PiAdmin)
-host = os.getenv("PIHOLE_URL", "http://localhost")
+host = os.getenv("PIHOLE_URL", "http://16.171.233.214")
 token = os.getenv("PIHOLE_API_KEY", "PiAdmin")
 
 print(f"🔗 Connecting to Pi-hole at {host}")
@@ -36,9 +36,9 @@ client = PiHole6Client(host, token)
 # Domains you want Siri to block/unblock.
 # These are the sites that will be added/removed from the blocklist.
 DOMAINS_TO_BLOCK = [
-    "youtube.com",
-    "tiktok.com",
-    "instagram.com"
+    "(\.|^)netflix\.com$",
+    "(\.|^)instagram\.com$",
+    "(\.|^)tiktok\.com$",
 ]
 
 # -----------------------------------------------------
@@ -52,7 +52,7 @@ def poll_pihole():
     This function runs in a separate thread. It fetches:
     - History: Historical data of queries.
     - Queries: Recent DNS queries.
-    
+
     It prints the results to the console for monitoring purposes.
     """
     # Wait 35 seconds initially to allow the system/network to fully start up.
@@ -85,10 +85,10 @@ app = Flask(__name__)
 def break_the_internet():
     """
     Webhook to block specific domains.
-    
+
     Triggered via GET or POST request to /break_the_internet.
     Iterates through DOMAINS_TO_BLOCK and adds them to the Pi-hole's deny list.
-    
+
     Returns:
         tuple: A success message and HTTP 200 status, or an error message and HTTP 500.
     """
@@ -97,9 +97,9 @@ def break_the_internet():
     try:
         for domain in DOMAINS_TO_BLOCK:
             print(f"Blocking: {domain}")
-            # Add the domain to the 'deny' list (blacklist) with 'exact' matching.
+            # Add the domain to the 'deny' list (blacklist) with 'regex' matching.
             # This prevents access to these sites immediately.
-            client.domain_management.add_domain(domain, "deny", "exact")
+            client.domain_management.add_domain(domain, "deny", "regex", groups=[0])
         return "Internet broken 😈", 200
 
     except Exception as e:
@@ -111,10 +111,10 @@ def break_the_internet():
 def fix_the_internet():
     """
     Webhook to unblock specific domains.
-    
+
     Triggered via GET or POST request to /fix_the_internet.
     Iterates through DOMAINS_TO_BLOCK and removes them from the Pi-hole's deny list.
-    
+
     Returns:
         tuple: A success message and HTTP 200 status, or an error message and HTTP 500.
     """
@@ -125,24 +125,12 @@ def fix_the_internet():
             print(f"Unblocking: {domain}")
             # Remove the domain from the 'deny' list.
             # This restores access to these sites.
-            client.domain_management.delete_domain(domain, "deny", "exact")
+            client.domain_management.delete_domain(domain, "deny", "regex")
         return "Internet fixed 😇", 200
 
     except Exception as e:
         print(f"[!] Error unblocking: {e}")
         return f"Error: {e}", 500
-
-
-@app.route('/trigger', methods=['GET','POST'])
-def trigger():
-    """
-    A generic test webhook.
-    
-    Can be used to verify that the server is reachable and responding.
-    """
-    print("🔔 General webhook triggered")
-    return "OK", 200
-
 
 if __name__ == "__main__":
     # Run the Flask app on all available network interfaces (0.0.0.0) on port 5005.

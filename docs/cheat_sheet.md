@@ -1,106 +1,509 @@
 # Command Cheat Sheet
 
-## 1. Configuration Management (Ansible)
-**Run Playbook:**
+Quick reference for common commands. Bookmark this page!
+
+---
+
+## 🚀 Quick Start
+
 ```bash
-cd ansible
-ansible-playbook -i inventory.ini playbook.yml --ask-vault-pass
+# Full deployment (from scratch)
+cd terraform && terraform init && terraform apply
+cd ../ansible && ansible-playbook -i inventory.ini playbook.yml --ask-vault-pass
 ```
 
-**Manage Secrets (Vault):**
+---
+
+## 📦 Terraform Commands
+
+| Task | Command | Description |
+|------|---------|-------------|
+| **Initialize** | `terraform init` | Download providers, initialize backend |
+| **Preview** | `terraform plan` | Show what will change |
+| **Deploy** | `terraform apply` | Create/update infrastructure |
+| **Auto-approve** | `terraform apply -auto-approve` | Skip confirmation prompt |
+| **Destroy** | `terraform destroy` | Delete ALL resources |
+| **Show state** | `terraform show` | Display current state |
+| **Output** | `terraform output` | Show output values |
+| **Format** | `terraform fmt` | Format `.tf` files |
+| **Validate** | `terraform validate` | Check syntax |
+
+**Targeted operations:**
 ```bash
+# Destroy specific resource
+terraform destroy -target=aws_instance.pihole-testing
+
+# Apply only specific resource
+terraform apply -target=aws_security_group.allow_ssh
+```
+
+---
+
+## 🎭 Ansible Commands
+
+### Playbook Execution
+```bash
+# Run playbook
+ansible-playbook -i inventory.ini playbook.yml --ask-vault-pass
+
+# Dry run (check mode)
+ansible-playbook -i inventory.ini playbook.yml --check
+
+# Run specific role
+ansible-playbook -i inventory.ini playbook.yml --tags "pihole-start-services"
+
+# Verbose output
+ansible-playbook -i inventory.ini playbook.yml -vvv
+```
+
+### Vault Management
+```bash
+# Encrypt file
+ansible-vault encrypt vault.yml
+
+# Decrypt file
+ansible-vault decrypt vault.yml
+
 # Edit encrypted file
 ansible-vault edit vault.yml
 
 # View encrypted file
 ansible-vault view vault.yml
+
+# Change vault password
+ansible-vault rekey vault.yml
 ```
 
-## 2. Infrastructure (Terraform)
-Commands to manage the infrastructure lifecycle.
-
-| Action | Command | Description |
-| :--- | :--- | :--- |
-| **Initialize** | `terraform init` | Downloads providers and sets up state. |
-| **Preview** | `terraform plan` | Shows what changes will be made. |
-| **Deploy** | `terraform apply` | Creates or updates resources (add `-auto-approve` to skip yes). |
-| **Redeploy App** | `terraform taint aws_instance.pihole` | Marks instance for recreation (forcing new User Data run). |
-| **Clean Up** | `terraform destroy` | Deletes **ALL** resources (Stop paying). |
-
-## 3. SSH Access & Management
-How to connect to your EC2 instance.
-
-**Get Public IP:**
+### Ansible Galaxy
 ```bash
+# Install role
+ansible-galaxy install geerlingguy.docker
+
+# Install from requirements file
+ansible-galaxy install -r requirements.yml
+
+# List installed roles
+ansible-galaxy list
+```
+
+---
+
+## 🐳 Docker Commands (on EC2)
+
+### Container Management
+```bash
+# List running containers
+docker ps
+
+# List all containers (including stopped)
+docker ps -a
+
+# View container logs
+docker logs pihole
+docker logs python-monitor
+docker logs bash-monitor
+
+# Follow logs (real-time)
+docker logs -f pihole
+
+# Restart container
+docker restart pihole
+
+# Stop container
+docker stop pihole
+
+# Remove container
+docker rm pihole
+
+# Execute command in container
+docker exec pihole pihole -v
+```
+
+### Docker Compose
+```bash
+# Start all services
+cd ~/pihole-devops-project/docker
+docker compose up -d
+
+# Stop all services
+docker compose down
+
+# Restart all services
+docker compose restart
+
+# View logs
+docker compose logs -f
+
+# Pull latest images
+docker compose pull
+
+# Rebuild images
+docker compose build
+
+# View service status
+docker compose ps
+```
+
+### Resource Monitoring
+```bash
+# Container stats (real-time)
+docker stats
+
+# Container stats (snapshot)
+docker stats --no-stream
+
+# Disk usage
+docker system df
+
+# Clean up unused resources
+docker system prune -a
+```
+
+---
+
+## 🔌 SSH & Connectivity
+
+### SSH Access
+```bash
+# Connect to EC2
+ssh -i terraform/pihole_key ubuntu@<IP>
+
+# Execute remote command
+ssh -i terraform/pihole_key ubuntu@<IP> "docker ps"
+
+# Copy file to server
+scp -i terraform/pihole_key file.txt ubuntu@<IP>:/home/ubuntu/
+
+# Copy file from server
+scp -i terraform/pihole_key ubuntu@<IP>:/path/to/file.txt ./
+```
+
+### Get EC2 IP
+```bash
+# From Terraform
+cd terraform
+terraform output -json | jq -r '.instance_public_ip.value'
+
+# From AWS CLI
 aws ec2 describe-instances \
-  --filters "Name=tag:Name,Values=PiHole - AWS" "Name=instance-state-name,Values=running" \
+  --filters "Name=tag:Name,Values=PiHole - AWS" \
+            "Name=instance-state-name,Values=running" \
   --query "Reservations[*].Instances[*].PublicIpAddress" \
   --output text
+
+# From inventory file
+cat ansible/inventory.ini | grep -oP '\d+\.\d+\.\d+\.\d+'
 ```
 
-**Connect via SSH:**
+---
+
+## 🕵️ Testing & Verification
+
+### DNS Testing
 ```bash
-# Replace <public-ip> with the actual IP
-ssh -i pihole_key ubuntu@<public-ip>
+# Test DNS resolution
+dig @<EC2_IP> google.com +short
 
-ssh -i pihole_key ubuntu@$(aws ec2 describe-instances --filters "Name=tag:Name,Values=PiHole - AWS" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].PublicIpAddress" --output text)
+# Test ad blocking
+dig @<EC2_IP> ads.google.com +short
+# Should return 0.0.0.0
 
+# Test from server itself
+ssh -i terraform/pihole_key ubuntu@<IP> "dig @127.0.0.1 google.com +short"
+
+# Check DNS server response time
+dig @<EC2_IP> google.com | grep "Query time"
 ```
 
-**Check Deployment Logs (Server Side):**
+### HTTP Testing
 ```bash
-# Verify the User Data script execution
-tail -n 50 /var/log/cloud-init-output.log
+# Test web interface
+curl -I http://<EC2_IP>/admin/
+# Should return HTTP 200 or 302
+
+# Test webhook API
+curl http://<EC2_IP>:5005/stats | jq
+
+# Test with authentication
+curl -u admin:<PASSWORD> http://<EC2_IP>/admin/api.php
 ```
 
-## 4. Testing & Verification
-Verify the application is working.
-
-**Check Docker Containers:**
+### Port Testing
 ```bash
-ssh -i pihole_key ubuntu@<public-ip> "docker ps"
+# Check if port is open
+nc -zv <EC2_IP> 53
+nc -zv <EC2_IP> 80
+nc -zv <EC2_IP> 5005
 
-ssh -i pihole_key ubuntu@$(aws ec2 describe-instances --filters "Name=tag:Name,Values=PiHole - AWS" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].PublicIpAddress" --output text) "docker ps"
+# Scan all open ports
+nmap <EC2_IP>
 ```
 
-**Test Web Interface:**
+---
+
+## 🛠️ Pi-hole Management
+
+### Pi-hole CLI (via Docker)
 ```bash
-# Should return HTTP 302 or 200
-curl -I http://<public-ip>/admin/
+# Show Pi-hole version
+docker exec pihole pihole -v
 
-curl -I http://$(aws ec2 describe-instances --filters "Name=tag:Name,Values=PiHole - AWS" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].PublicIpAddress" --output text)/admin/
+# Update Pi-hole
+docker exec pihole pihole -up
+
+# Update blocklists (gravity)
+docker exec pihole pihole -g
+
+# Whitelist domain
+docker exec pihole pihole -w example.com
+
+# Blacklist domain
+docker exec pihole pihole -b ads.example.com
+
+# Show lists
+docker exec pihole pihole -l
+
+# Disable Pi-hole for 5 minutes
+docker exec pihole pihole disable 5m
+
+# Enable Pi-hole
+docker exec pihole pihole enable
+
+# Show query log
+docker exec pihole pihole -t
+
+# Show top blocked domains
+docker exec pihole pihole -c
 ```
 
-**Test DNS Resolution (Local on Server):**
+### Configuration
 ```bash
-# Useful to verify Pi-hole is actually listening
-ssh -i pihole_key ubuntu@<public-ip> "dig @127.0.0.1 google.com +short"
+# Edit Pi-hole config
+ssh -i terraform/pihole_key ubuntu@<IP>
+docker exec -it pihole nano /etc/pihole/pihole.toml
 
-dig @$(aws ec2 describe-instances --filters "Name=tag:Name,Values=PiHole - AWS" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].PublicIpAddress" --output text) google.com +short
+# Restart after config change
+docker restart pihole
+
+# View current config
+docker exec pihole cat /etc/pihole/pihole.toml
 ```
 
-**Test DNS Resolution (From your laptop):**
+---
+
+## 🔄 Maintenance Tasks
+
+### Backup
 ```bash
-# Warning: Often blocked by residential ISPs
-dig @<public-ip> google.com +short
+# Backup Pi-hole config
+scp -i terraform/pihole_key -r \
+  ubuntu@<IP>:~/pihole-devops-project/docker/etc-pihole \
+  ./backup-$(date +%Y%m%d)
 
-dig @$(aws ec2 describe-instances --filters "Name=tag:Name,Values=PiHole - AWS" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].PublicIpAddress" --output text) google.com +short
+# Backup entire project
+ssh -i terraform/pihole_key ubuntu@<IP> \
+  "tar -czf /tmp/pihole-backup.tar.gz ~/pihole-devops-project"
+scp -i terraform/pihole_key ubuntu@<IP>:/tmp/pihole-backup.tar.gz ./
 ```
 
-## 6. Utilities
-**Dynamic IP Updater:**
+### Restore
+```bash
+# Restore Pi-hole config
+scp -i terraform/pihole_key -r \
+  ./backup-20251212/etc-pihole \
+  ubuntu@<IP>:~/pihole-devops-project/docker/
+
+# Restart Pi-hole
+ssh -i terraform/pihole_key ubuntu@<IP> "docker restart pihole"
+```
+
+### Updates
+```bash
+# Update Docker images
+ssh -i terraform/pihole_key ubuntu@<IP> \
+  "cd ~/pihole-devops-project/docker && docker compose pull && docker compose up -d"
+
+# Update system packages
+ssh -i terraform/pihole_key ubuntu@<IP> \
+  "sudo apt update && sudo apt upgrade -y"
+```
+
+---
+
+## 🔧 Utilities
+
+### Dynamic IP Updater
 ```bash
 # Run manually
 python3 scripts/update_ip.py
 
-# Run in background (12h interval)
-nohup python3 scripts/update_ip.py &
+# Run in background
+nohup python3 scripts/update_ip.py > /tmp/ip_updater.log 2>&1 &
+
+# Check if running
+ps aux | grep update_ip.py
+
+# View logs
+tail -f /tmp/ip_updater.log
+
+# Kill process
+pkill -f update_ip.py
 ```
 
-## 5. Key Setup Commands (One-time)
-These were used during the initial setup.
-
-**Generate SSH Key:**
+### System Monitoring
 ```bash
-ssh-keygen -t ed25519 -f pihole_key -N ""
+# View system resources
+ssh -i terraform/pihole_key ubuntu@<IP> "htop"
+
+# Check disk usage
+ssh -i terraform/pihole_key ubuntu@<IP> "df -h"
+
+# Check memory usage
+ssh -i terraform/pihole_key ubuntu@<IP> "free -h"
+
+# Check network connections
+ssh -i terraform/pihole_key ubuntu@<IP> "sudo netstat -tulpn"
 ```
+
+---
+
+## 🐛 Troubleshooting
+
+### View Logs
+```bash
+# Pi-hole logs
+docker logs pihole --tail 100
+
+# Python monitor logs
+docker logs python-monitor --tail 50
+
+# Bash monitor logs
+docker logs bash-monitor --tail 50
+
+# System logs
+ssh -i terraform/pihole_key ubuntu@<IP> "sudo journalctl -xe"
+
+# Docker daemon logs
+ssh -i terraform/pihole_key ubuntu@<IP> "sudo journalctl -u docker"
+```
+
+### Restart Services
+```bash
+# Restart Pi-hole
+docker restart pihole
+
+# Restart all containers
+cd ~/pihole-devops-project/docker
+docker compose restart
+
+# Restart Docker daemon
+sudo systemctl restart docker
+```
+
+### Check Service Status
+```bash
+# Check if Pi-hole is running
+docker ps | grep pihole
+
+# Check if port 53 is listening
+sudo netstat -tulpn | grep :53
+
+# Check DNS resolution
+dig @127.0.0.1 google.com +short
+```
+
+---
+
+## 📊 Monitoring
+
+### Real-time Stats
+```bash
+# Docker stats
+docker stats
+
+# System stats
+htop
+
+# Network stats
+iftop
+
+# Disk I/O
+iotop
+```
+
+### Webhook API
+```bash
+# Get Pi-hole stats
+curl http://<EC2_IP>:5005/stats | jq
+
+# Pretty print
+curl -s http://<EC2_IP>:5005/stats | jq '.'
+
+# Get specific field
+curl -s http://<EC2_IP>:5005/stats | jq '.ads_blocked_today'
+
+# Watch stats (refresh every 5s)
+watch -n 5 'curl -s http://<EC2_IP>:5005/stats | jq'
+```
+
+---
+
+## 🔐 Security
+
+### Update Security Group
+```bash
+# Get your current IP
+curl https://checkip.amazonaws.com
+
+# Update Terraform
+cd terraform
+# Edit main.tf with new IP
+terraform apply
+```
+
+### Rotate SSH Keys
+```bash
+# Generate new key
+ssh-keygen -t ed25519 -f pihole_key_new -N ""
+
+# Update Terraform
+cd terraform
+# Update main.tf to use new key
+terraform apply
+
+# Test new key
+ssh -i pihole_key_new ubuntu@<IP>
+```
+
+---
+
+## 📚 Reference
+
+### File Locations (on EC2)
+```
+/home/ubuntu/pihole-devops-project/     # Project root
+/home/ubuntu/pihole-devops-project/docker/etc-pihole/    # Pi-hole config
+/home/ubuntu/pihole-devops-project/docker/etc-dnsmasq.d/ # DNS config
+/var/lib/docker/                        # Docker data
+/etc/resolv.conf                        # System DNS config
+```
+
+### Important URLs
+- **Pi-hole Web UI**: `http://<EC2_IP>/admin`
+- **Webhook API**: `http://<EC2_IP>:5005/stats`
+- **Pi-hole Docs**: https://docs.pi-hole.net
+- **Docker Docs**: https://docs.docker.com
+
+---
+
+**Pro Tip:** Add these aliases to your `~/.bashrc` or `~/.zshrc`:
+
+```bash
+alias pihole-ssh='ssh -i ~/pihole-devops-project/terraform/pihole_key ubuntu@<IP>'
+alias pihole-logs='ssh -i ~/pihole-devops-project/terraform/pihole_key ubuntu@<IP> "docker logs -f pihole"'
+alias pihole-stats='curl -s http://<IP>:5005/stats | jq'
+```
+
+---
+
+**See also:** [Installation](INSTALLATION.md) | [Usage](USAGE.md) | [Architecture](ARCHITECTURE.md)

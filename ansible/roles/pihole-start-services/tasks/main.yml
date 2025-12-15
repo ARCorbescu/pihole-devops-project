@@ -1,0 +1,26 @@
+---
+# -------------------------------------------------------
+# Start Application
+# -------------------------------------------------------
+- name: Start Pi-hole Services
+  community.docker.docker_compose_v2:
+    project_src: "{{ project_dir }}/docker"
+    state: present
+    env_files: []
+  environment:
+    PIHOLE_PASSWORD: "{{ pihole_password }}"
+
+# -------------------------------------------------------
+# Pi-hole V6 Configuration
+# -------------------------------------------------------
+- name: Wait for Pi-hole container to be ready
+  pause:
+    seconds: 10
+
+- name: Allow non-local queries (Pi-hole v6)
+  command: docker exec pihole sed -i 's/listeningMode = "LOCAL"/listeningMode = "ALL"/' /etc/pihole/pihole.toml
+  changed_when: false
+
+- name: Restart Pi-hole to apply config
+  command: docker restart pihole
+  changed_when: false

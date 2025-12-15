@@ -1,0 +1,16 @@
+---
+# -------------------------------------------------------
+# Docker Deployment
+# -------------------------------------------------------
+
+- name: Pull Docker Images
+  command: docker compose pull
+  args:
+    chdir: "{{ project_dir }}/docker"
+  changed_when: false
+
+- name: Build Docker Images (with working DNS)
+  command: docker compose build
+  args:
+    chdir: "{{ project_dir }}/docker"
+  changed_when: false
