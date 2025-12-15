@@ -23,10 +23,10 @@ from pihole6api import PiHole6Client
 # -----------------------------------------------------
 
 # Load configuration from environment variables.
-# PIHOLE_URL: The base URL of your Pi-hole instance (default: http://localhost)
-# PIHOLE_API_KEY: The API token/password for authentication (default: PiAdmin)
-host = os.getenv("PIHOLE_URL", "http://16.171.233.214")
-token = os.getenv("PIHOLE_API_KEY", "PiAdmin")
+# PIHOLE_URL: The base URL of your Pi-hole instance
+# PIHOLE_API_KEY: The API token/password for authentication
+host = os.getenv("PIHOLE_URL", "Something went wrong with the URL")
+token = os.getenv("PIHOLE_API_KEY", "Something went wrong with the password")
 
 print(f"🔗 Connecting to Pi-hole at {host}")
 
@@ -36,9 +36,14 @@ client = PiHole6Client(host, token)
 # Domains you want Siri to block/unblock.
 # These are the sites that will be added/removed from the blocklist.
 DOMAINS_TO_BLOCK = [
-    "(\.|^)netflix\.com$",
-    "(\.|^)instagram\.com$",
-    "(\.|^)tiktok\.com$",
+    r"(\.|^)netflix\.com$",
+    r"(\.|^)instagram\.com$",
+    r"(\.|^)tiktok\.com$",
+    r".*amkai.*",
+    r".*akami.*",
+    r".*tiktok.*",
+    r".*appsflyer.*"
+
 ]
 
 # -----------------------------------------------------
@@ -131,6 +136,68 @@ def fix_the_internet():
     except Exception as e:
         print(f"[!] Error unblocking: {e}")
         return f"Error: {e}", 500
+
+@app.route('/block_dns', methods=['GET','POST'])
+def block_dns():
+    """
+    Webhook to enable Pi-hole's DNS blocking.
+
+    Triggered via GET or POST request to /block_dns.
+    Enables Pi-hole's blocking feature, which filters DNS queries based on configured blocklists.
+
+    Query Parameters:
+        timer (int, optional): Duration in seconds for temporary blocking. 
+                               If not provided, blocking is enabled permanently.
+                               Example: /block_dns?timer=300 (enable for 5 minutes)
+
+    Returns:
+        tuple: A success message and HTTP 200 status, or an error message and HTTP 500.
+    """
+    print("🚫 Enabling Pi-hole DNS blocking...")
+    
+    # Get optional timer parameter from query string
+    timer = request.args.get('timer', type=int)
+    
+    try:
+        result = client.dns_control.set_blocking_status(True, timer)
+        message = f"Pi-hole blocking enabled {'permanently' if timer is None else f'for {timer} seconds'} ✅"
+        print(f"[OK] {message}")
+        return message, 200
+    except Exception as e:
+        print(f"[!] Error enabling blocking: {e}")
+        return f"Error: {e}", 500
+
+
+@app.route('/unblock_dns', methods=['GET','POST'])
+def unblock_dns():
+    """
+    Webhook to disable Pi-hole's DNS blocking.
+
+    Triggered via GET or POST request to /unblock_dns.
+    Disables Pi-hole's blocking feature, allowing all DNS queries to pass through unfiltered.
+
+    Query Parameters:
+        timer (int, optional): Duration in seconds for temporary unblocking. 
+                               If not provided, blocking is disabled permanently.
+                               Example: /unblock_dns?timer=600 (disable for 10 minutes)
+
+    Returns:
+        tuple: A success message and HTTP 200 status, or an error message and HTTP 500.
+    """
+    print("✅ Disabling Pi-hole DNS blocking...")
+    
+    # Get optional timer parameter from query string
+    timer = request.args.get('timer', type=int)
+    
+    try:
+        result = client.dns_control.set_blocking_status(False, timer)
+        message = f"Pi-hole blocking disabled {'permanently' if timer is None else f'for {timer} seconds'} 🔓"
+        print(f"[OK] {message}")
+        return message, 200
+    except Exception as e:
+        print(f"[!] Error disabling blocking: {e}")
+        return f"Error: {e}", 500
+
 
 if __name__ == "__main__":
     # Run the Flask app on all available network interfaces (0.0.0.0) on port 5005.
