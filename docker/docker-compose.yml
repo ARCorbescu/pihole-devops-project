@@ -74,7 +74,7 @@ services:
 
       # Pi-hole v6+ uses FTLCONF_ prefix for configuration
       # This sets the web interface password
-      # FTLCONF_webserver_api_password: "${PIHOLE_PASSWORD}"
+      FTLCONF_webserver_api_password: "${PIHOLE_PASSWORD}"
 
       # Upstream DNS servers (where Pi-hole forwards queries)
       DNS1: "1.1.1.1"  # Cloudflare
@@ -207,7 +207,7 @@ services:
       PIHOLE_URL: "http://172.17.0.1"
       
       # API authentication (same as web UI password)
-      PIHOLE_API_KEY: "${PIHOLE_PASSWORD}"
+      # PIHOLE_API_KEY: "${PIHOLE_PASSWORD}"
       
       # How often to collect stats (seconds)
       MONITOR_INTERVAL: "60"
