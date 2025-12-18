@@ -182,7 +182,7 @@ def unblock_dns():
                                Example: /unblock_dns?timer=600 (disable for 10 minutes)
 
     Returns:
-        tuple: A success message and HTTP 200 status, or an error message and HTTP 500.
+        tuple: A success message and HTTP 200 status, or an error message and HTTP 500
     """
     print("✅ Disabling Pi-hole DNS blocking...")
     
