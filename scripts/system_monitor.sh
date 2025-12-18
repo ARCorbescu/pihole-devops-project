@@ -71,11 +71,21 @@ print_disk_info() {
 
 # Function to get OS information
 print_os_info() {
-
-    os_info=$(hostnamectl)
-    echo "$os_info" | grep "Operating System"
-    echo "$os_info" | grep "Kernel"
-    echo "$os_info" | grep "Architecture"
+    if [ -f /etc/os-release ]; then
+        os_name=$(grep "^PRETTY_NAME=" /etc/os-release | cut -d'"' -f2)
+        echo "Operating System: ${os_name}"
+    elif [ -f /etc/lsb-release ]; then
+        os_name=$(grep "DISTRIB_DESCRIPTION" /etc/lsb-release | cut -d'"' -f2)
+        echo "Operating System: ${os_name}"
+    else
+        echo "Operating System: Unknown"
+    fi
+    
+    kernel=$(uname -r)
+    echo "Kernel: Linux ${kernel}"
+    
+    arch=$(uname -m)
+    echo "Architecture: ${arch}"
 }
 
 main() {
