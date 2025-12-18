@@ -28,14 +28,28 @@ cd ../ansible && ansible-playbook -i inventory.ini playbook.yml --ask-vault-pass
 | **Format** | `terraform fmt` | Format `.tf` files |
 | **Validate** | `terraform validate` | Check syntax |
 
-**Targeted operations:**
-```bash
+### Troubleshooting: Resource Conflicts
+If you see error messages like `The keypair already exists` or `The security group 'allow_ssh' already exists`:
+
+1.  **Find the existing IDs:**
+    ```bash
+    # Get Security Group ID
+    aws ec2 describe-security-groups --group-names allow_ssh --query "SecurityGroups[0].GroupId" --output text
+    ```
+2.  **Import them into Terraform:**
+    ```bash
+    # Replace <SG_ID> with the ID from the previous step
+    terraform import aws_key_pair.deployer pihole-key
+    terraform import aws_security_group.allow_ssh <SG_ID>
+    ```
+3.  **Resume apply:**
+    ```bash
 # Destroy specific resource
 terraform destroy -target=aws_instance.pihole-testing
 
 # Apply only specific resource
 terraform apply -target=aws_security_group.allow_ssh
-```
+    ```
 
 ---
 
@@ -461,19 +475,44 @@ cd terraform
 terraform apply
 ```
 
-### Rotate SSH Keys
+---
+
+## 🔐 Security & SSH Keys
+
+### Fixing "Unprotected Private Key" (Permissions)
+If SSH/Ansible complains that permissions are "too open" (e.g., 0644):
 ```bash
 # Generate new key
-ssh-keygen -t ed25519 -f pihole_key_new -N ""
+ssh-keygen -t ed25519 -f pihole_key_v2 -N ""
+
+# Set permissions to owner-read-only
+chmod 400 terraform/pihole_key_v2
 
 # Update Terraform
 cd terraform
+
 # Update main.tf to use new key
 terraform apply
 
 # Test new key
-ssh -i pihole_key_new ubuntu@<IP>
+ssh -i pihole_key_v2 ubuntu@<IP>
 ```
+
+### Rotating SSH Keys
+To generate a new key and update the infrastructure:
+1.  **Generate new key pair:**
+    ```bash
+    cd terraform
+    ssh-keygen -t ed25519 -f pihole_key_v3 -N ""
+    chmod 400 pihole_key_v3
+    ```
+2.  **Update `main.tf`**: Change `key_name` and the `public_key` file reference.
+3.  **Update `inventory.tf`**: Change the `ansible_ssh_private_key_file` path.
+4.  **Apply changes**:
+    ```bash
+    terraform apply -auto-approve
+    ```
+    *Note: This will recreate the EC2 instance to inject the new key.*
 
 ---
 
@@ -496,6 +535,19 @@ ssh -i pihole_key_new ubuntu@<IP>
 
 ---
 
+### Test DNS Resolution
+```bash
+# Test DNS resolution
+dig @<EC2_IP> google.com +short
+```
+
+### Test ad blocking
+```bash
+dig @<EC2_IP> ads.google.com +short
+```
+
+---
+
 **Pro Tip:** Add these aliases to your `~/.bashrc` or `~/.zshrc`:
 
 ```bash
@@ -506,4 +558,4 @@ alias pihole-stats='curl -s http://<IP>:5005/stats | jq'
 
 ---
 
-**See also:** [Installation](INSTALLATION.md) | [Usage](USAGE.md) | [Architecture](ARCHITECTURE.md)
+**See also:** [Installation](INSTALLATION.md) | [Usage](USAGE.md) | [Architecture](ARCHITECTURE.md) | [Deployment Walkthrough](DEPLOYMENT_WALKTHROUGH.md)

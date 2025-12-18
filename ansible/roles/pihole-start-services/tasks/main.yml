@@ -3,10 +3,9 @@
 # Start Application
 # -------------------------------------------------------
 - name: Start Pi-hole Services
-  community.docker.docker_compose_v2:
-    project_src: "{{ project_dir }}/docker"
-    state: present
-    env_files: []
+  shell: docker compose up -d
+  args:
+    chdir: "{{ project_dir }}/docker"
   environment:
     PIHOLE_PASSWORD: "{{ pihole_password }}"
 

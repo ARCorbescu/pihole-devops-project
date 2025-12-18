@@ -125,7 +125,9 @@ Generated locally with:
 ssh-keygen -t ed25519 -f pihole_key -N ""
 ```
 
-#### 4. Dynamic Inventory
+#### 4. The Bridge: Dynamic Inventory
+We use a `local_file` resource in Terraform to automatically generate the Ansible `inventory.ini` file.
+
 ```hcl
 resource "local_file" "ansible_inventory" {
   content = <<-EOT
@@ -136,10 +138,17 @@ resource "local_file" "ansible_inventory" {
 }
 ```
 
-**Why dynamic inventory?**
-- EC2 public IP changes on each `terraform apply`
-- Ansible automatically gets the correct IP
-- No manual configuration needed
+**How does it work automatically?**
+1.  **Dependency**: The `local_file` resource references `${aws_instance.pihole-testing.public_ip}`.
+2.  **Execution Order**: Terraform calculates the order of operations. It knows it must first create the EC2 instance to get its public IP address.
+3.  **Writing the File**: Once the IP is known, Terraform evaluates the `content` string and writes it to the designated `filename` on your local disk.
+4.  **Instant Update**: Every time you run `terraform apply` (e.g., if you destroy and recreate the instance), the IP changes. Terraform detects this change, updates the state, and overwrites `inventory.ini` with the fresh IP.
+5.  **Ansible Readiness**: When you switch to the `ansible/` directory and run your playbook, Ansible reads the updated `inventory.ini` and connects to the new server without any manual IP copying.
+
+**Why this approach?**
+- **Eliminates Manual Error**: No more copy-pasting IPs from the AWS Console.
+- **Consistent Config**: Ensures Ansible always uses the correct SSH key and user.
+- **Seamless Workflow**: Creates a "Build -> Configure" pipeline where the two tools talk to each other through the filesystem.
 
 ---
 
@@ -438,4 +447,4 @@ docker restart pihole
 
 ---
 
-**Next:** [Usage Guide](USAGE.md) | [Cheat Sheet](cheat_sheet.md)
+**Next:** [Usage Guide](USAGE.md) | [Cheat Sheet](cheat_sheet.md) | [Deployment Walkthrough](DEPLOYMENT_WALKTHROUGH.md)
