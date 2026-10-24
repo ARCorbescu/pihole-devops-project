@@ -13,6 +13,8 @@ env/
 docker/.env
 docker/etc-pihole/
 docker/etc-dnsmasq.d/
+docker/tailscale-data/
+tailscale-data/
 *.log
 
 # Ansible
